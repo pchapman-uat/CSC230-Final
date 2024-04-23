@@ -10,7 +10,7 @@ HTTPClient client;
 DynamicJsonBuffer jsonBuffer;
 
 int id;
-
+String clockIn = "";
 int mode = 0;
 void setup()
 {
@@ -34,12 +34,14 @@ void loop()
 	M5.Lcd.setCursor(0,0);
 	M5.Lcd.println("Mode: ");
 	if(mode == 0) M5.Lcd.println("GET");
-	else if(mode == 1) M5.Lcd.println("POST");
+	else if(mode == 1) M5.Lcd.println("CLOCK OUT");
 	else if(mode == 2) M5.Lcd.println("CLOCK IN");
+	if(clockIn != "") M5.Lcd.printf("Clock In: %s", clockIn.c_str());
 	M5.Lcd.println("ID: ");
 	M5.Lcd.println(id);
 	if(M5.BtnA.wasReleased()){
 		if(mode == 0){
+			M5.Lcd.fillScreen(YELLOW);
 			M5.Lcd.println("Mode: GET");
 			client.begin(HTTP_GET);
 			int httpResponceCode = client.POST("");
@@ -53,15 +55,15 @@ void loop()
 
 				JsonObject& response = jsonBuffer.parseObject(payload);
 				response.printTo(Serial);
-				M5.Lcd.println(response["Start"].asString());
 				id = response["ID"].as<int>();
-				M5.Lcd.println(response["ID"].asString());
+				clockIn = response["Start"].as<String>();
 			} else {
 				Serial.print("Error in HTTP GET request. HTTP Error code: ");
 				Serial.println(httpResponceCode);
 			}
 		} else if (mode == 1){
-			M5.Lcd.println("Mode: POST");
+			M5.Lcd.fillScreen(YELLOW);
+			M5.Lcd.println("Mode: CLOCK OUT");
 			client.begin(HTTP_POST);
 			client.addHeader("Content-Type", "application/json");
 			int httpResponceCode = client.POST("{\"id\": " + String(id) + "}");
@@ -76,7 +78,8 @@ void loop()
 				Serial.println(httpResponceCode);
 			}
 		} else if (mode == 2){
-			M5.Lcd.println("Mode: Clock In");
+			M5.Lcd.fillScreen(YELLOW);
+			M5.Lcd.println("Mode: CLOCK IN");
 			client.begin(HTTP_IN);
 			int httpResponceCode = client.POST("");
 			if(httpResponceCode > 0){
@@ -91,8 +94,11 @@ void loop()
 				Serial.print("Error in HTTP GET request. HTTP Error code: ");
 				Serial.println(httpResponceCode);
 			}
-
 		}
+		M5.Lcd.fillScreen(GREEN);
 	}	
-	else if(M5.BtnB.wasReleased()) mode = (mode + 1) % 3;
+	else if(M5.BtnB.wasReleased()) {
+		mode = (mode + 1) % 3;
+		M5.Lcd.fillScreen(GREEN);
+	}
 }
