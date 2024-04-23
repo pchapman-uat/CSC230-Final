@@ -1,11 +1,13 @@
+
 #include <WiFi.h>
 #include <HTTPClient.h>
 #include "secrets.h"
 
 #include <M5StickCPlus.h>
+#include <ArduinoJson.h>
 
 HTTPClient client;
-
+DynamicJsonBuffer jsonBuffer;
 void setup()
 {
 	M5.begin();
@@ -36,6 +38,10 @@ void loop()
 			String payload = client.getString();
 			Serial.println("Response payload:");
 			Serial.println(payload);
+
+			JsonObject& response = jsonBuffer.parseObject(payload);
+			response.printTo(Serial);
+			M5.Lcd.println(response["Start"].asString());
 		} else {
 			Serial.print("Error in HTTP GET request. HTTP Error code: ");
 			Serial.println(httpResponceCode);
