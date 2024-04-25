@@ -36,7 +36,7 @@ void loop()
 	if(mode == 0) M5.Lcd.println("GET");
 	else if(mode == 1) M5.Lcd.println("CLOCK OUT");
 	else if(mode == 2) M5.Lcd.println("CLOCK IN");
-	if(clockIn != "") M5.Lcd.printf("Clock In: %s", clockIn.c_str());
+	if(clockIn != "") M5.Lcd.printf("Clock In: %s", formatTime(clockIn).c_str());
 	M5.Lcd.println("ID: ");
 	M5.Lcd.println(id);
 	if(M5.BtnA.wasReleased()){
@@ -102,4 +102,30 @@ void loop()
 		mode = (mode + 1) % 3;
 		M5.Lcd.fillScreen(GREEN);
 	}
+}
+
+
+String formatTime(String time){
+	// Example: 2024-04-25T19:08:27Z
+	// Should be: 04/25/2024 12:08 PM
+	int hour = time.substring(11, 13).toInt(); // Extract hour
+    int minute = time.substring(14, 16).toInt(); // Extract minute
+	// Adjust time zone
+	hour -= 7;
+	if(hour < 0) hour += 24;
+
+	// Convert to 12 hour format
+	String ampm = "AM";
+	if(hour >= 12) {
+		ampm = "PM";
+	} 
+	if (hour > 12) {
+		hour-=12;
+	}
+	String hourStr = String(hour);
+	String minStr = String(minute);
+	// Add leading zero
+	if(hour < 10) hourStr = "0" + hourStr;
+	if(minute < 10) minStr = "0" + minStr;
+	return hourStr + ":" + minStr + " " + ampm;
 }
