@@ -25,7 +25,7 @@ void setup()
 	M5.Lcd.fillScreen(GREEN);
 	Serial.println("Connected");
 	M5.Lcd.setRotation(3);
-	
+	M5.Lcd.setTextSize(2);
 }
 
 void loop()
@@ -40,6 +40,7 @@ void loop()
 	M5.Lcd.println("ID: ");
 	M5.Lcd.println(id);
 	if(M5.BtnA.wasReleased()){
+		client.end();
 		if(mode == 0){
 			M5.Lcd.fillScreen(YELLOW);
 			M5.Lcd.println("Mode: GET");
