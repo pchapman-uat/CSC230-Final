@@ -8,6 +8,8 @@
 
 HTTPClient client;
 DynamicJsonBuffer jsonBuffer;
+RTC_TimeTypeDef RTC_TimeStruct;
+RTC_DateTypeDef RTC_DateStruct;
 
 int id;
 String clockIn = "";
@@ -26,6 +28,8 @@ void setup()
 	Serial.println("Connected");
 	M5.Lcd.setRotation(3);
 	M5.Lcd.setTextSize(2);
+	M5.Rtc.begin();
+
 }
 
 void loop()
@@ -37,8 +41,13 @@ void loop()
 	else if(mode == 1) M5.Lcd.println("CLOCK OUT");
 	else if(mode == 2) M5.Lcd.println("CLOCK IN");
 	if(clockIn != "") M5.Lcd.printf("Clock In: %s", formatTime(clockIn).c_str());
+	M5.Lcd.println();
 	M5.Lcd.println("ID: ");
 	M5.Lcd.println(id);
+	M5.Rtc.GetTime(&RTC_TimeStruct);
+	M5.Lcd.println("Now:");
+	 M5.Lcd.printf("Time : %02d : %02d : %02d\n", RTC_TimeStruct.Hours,
+                  RTC_TimeStruct.Minutes, RTC_TimeStruct.Seconds);
 	if(M5.BtnA.wasReleased()){
 		client.end();
 		if(mode == 0){
@@ -58,6 +67,21 @@ void loop()
 				response.printTo(Serial);
 				id = response["ID"].as<int>();
 				clockIn = response["Start"].as<String>();
+			} else {
+				Serial.print("Error in HTTP GET request. HTTP Error code: ");
+				Serial.println(httpResponceCode);
+			}
+			client.end();
+			client.begin(HTTP_TIME);
+			httpResponceCode = client.POST("");
+			if (httpResponceCode > 0) {
+				Serial.print("HTTP Response code: ");
+				Serial.println(httpResponceCode);
+
+				String payload = client.getString();
+				Serial.println("Response payload:");
+				Serial.println(payload);
+				setRTC(payload);
 			} else {
 				Serial.print("Error in HTTP GET request. HTTP Error code: ");
 				Serial.println(httpResponceCode);
@@ -128,4 +152,25 @@ String formatTime(String time){
 	if(hour < 10) hourStr = "0" + hourStr;
 	if(minute < 10) minStr = "0" + minStr;
 	return hourStr + ":" + minStr + " " + ampm;
+}
+void setRTC(String payload){
+	// Example: 2024-04-25T20:41:37.1771909Z
+	int year = payload.substring(0, 4).toInt(); // Extract year
+	int month = payload.substring(5, 7).toInt(); // Extract month
+	int day = payload.substring(8, 10).toInt(); // Extract day
+	int hour = payload.substring(11, 13).toInt(); // Extract hour
+	int minute = payload.substring(14, 16).toInt(); // Extract minute
+	hour -= 7;
+	if(hour < 0) hour += 24;
+	RTC_TimeTypeDef TimeStruct;
+	TimeStruct.Hours = hour;
+	TimeStruct.Minutes = minute;
+	TimeStruct.Seconds = 0;
+	M5.Rtc.SetTime(&TimeStruct);
+	RTC_DateTypeDef DateStruct;
+	DateStruct.Date = day;
+	DateStruct.Month = month;
+	DateStruct.Year = year;
+	M5.Rtc.SetDate(&DateStruct);
+	
 }
