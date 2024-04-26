@@ -264,5 +264,3 @@ View video on [OneDrive](https://uatedu-my.sharepoint.com/:v:/r/personal/pchapma
 ## Code
 
 The full project code can be viewed on the [GitHub](https://github.com/pchapman-uat/CSC230-Final)
-
-# 
